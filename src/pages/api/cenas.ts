@@ -5,8 +5,6 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // const session = await getSession({ req });
-  // if (session) {
   const result = await prisma?.tB_CAPITULO.findMany({
     where: {
       id_programa: 11099,
@@ -17,18 +15,47 @@ export default async function handle(
         where: {
           st_ativo: true,
         },
+        orderBy: {
+          id_numero: 'asc',
+        },
+        include: {
+          TB_CENA_PERSONAGEM: true,
+          TB_DUBLE_PERSONAGEM_CENA: true,
+          TB_CENA_FIGURANTE: true,
+          TB_CENA_TEXTO: {
+            where: {
+              st_ativo: true,
+            },
+            orderBy: {
+              id_numero: 'asc',
+            },
+          },
+        },
       },
     },
   });
 
-  const scenes = result?.flatMap(({ TB_CENA }) => TB_CENA);
+  const scenes = result
+    ?.flatMap(({ TB_CENA }) => TB_CENA)
+    .map(
+      ({
+        TB_CENA_PERSONAGEM,
+        TB_CENA_FIGURANTE,
+        TB_CENA_TEXTO,
+        TB_DUBLE_PERSONAGEM_CENA,
+        ...scene
+      }) => ({
+        ...scene,
+        personagens: TB_CENA_PERSONAGEM,
+        dubles: TB_DUBLE_PERSONAGEM_CENA,
+        figurantes: TB_CENA_FIGURANTE,
+        elementosTexto: TB_CENA_TEXTO,
+      }),
+    );
 
   const updatedData = JSON.stringify(scenes, (key, value) =>
     typeof value === 'bigint' ? Number(value) : value,
   );
 
-  res.json(JSON.parse(updatedData).length);
-  // } else {
-  //   res.status(401).send({ message: 'Unauthorized' });
-  // }
+  res.json(JSON.parse(updatedData));
 }
