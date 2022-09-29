@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-// import { getSession } from 'next-auth/react';
-// POST /api/post // Required fields in body: title // Optional fields in body: content
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
